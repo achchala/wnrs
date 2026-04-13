@@ -1,7 +1,7 @@
 import type { GameSession } from "../game";
 import * as G from "../game";
 import type { Card } from "../types";
-import { levelNumber, levelSubtitle, levelTitle, nextLevel } from "../types";
+import { LEVEL_ORDER, levelNumber, levelSubtitle, levelTitle, nextLevel } from "../types";
 
 export function Play({
   session,
@@ -43,7 +43,7 @@ function Done({
     <div class="stack-grow" style={{ textAlign: "center", gap: "1rem" }}>
       <h1 style={{ fontSize: "1.5rem" }}>That’s a wrap</h1>
       <p class="muted" style={{ fontWeight: 400, lineHeight: 1.45 }}>
-        Take a breath. Nothing here was saved—just people talking.
+        Take a breath. The app didn’t save anything—if you exchanged notes, keep those yourself.
       </p>
       <div class="row" style={{ marginTop: "1.5rem" }}>
         <button type="button" class="btn btn-primary" onClick={onAgain}>
@@ -65,12 +65,16 @@ function LevelGate({
   update: (fn: (s: GameSession) => GameSession) => void;
 }) {
   const n = nextLevel(session.currentLevel);
+  const need = G.cardsRequiredForLevel(session);
+  const blurb =
+    session.playMode === "duo"
+      ? `You’ve answered at least ${need} question cards in ${levelTitle(session.currentLevel)}. Dig Deeper will refresh in the next level. Move on when you’re ready.`
+      : `You’ve reached ${need} question cards in ${levelTitle(session.currentLevel)} (each person read about twice). Move on when the group is ready.`;
   return (
     <div class="stack-grow" style={{ textAlign: "center", gap: "1rem" }}>
       <h1 style={{ fontSize: "1.5rem" }}>Level complete</h1>
       <p class="muted" style={{ fontWeight: 400, lineHeight: 1.45 }}>
-        You’ve answered at least {G.CARDS_PER_LEVEL} questions in {levelTitle(session.currentLevel)}. Move on when
-        the group feels ready.
+        {blurb}
       </p>
       <div class="row" style={{ marginTop: "0.5rem" }}>
         <button type="button" class="btn btn-primary" onClick={() => update(G.continueToNextLevel)}>
@@ -120,13 +124,28 @@ function Playing({
             <span class="card-body" style={{ color: "var(--paper)" }}>
               ({levelTitle(session.currentLevel).toUpperCase()})
             </span>
-            <span class="card-body-sentence" style={{ color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>
+            <span class="card-body card-body-lg" style={{ color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>
               {levelSubtitle(session.currentLevel)}
             </span>
           </div>
           <div class="card-footer" style={{ color: "rgba(255,255,255,0.85)" }}>
             WE'RE NOT REALLY STRANGERS
           </div>
+        </div>
+        <p class="muted" style={{ margin: "0.75rem 0 0" }}>
+          Level
+        </p>
+        <div class="level-strip" role="group" aria-label="Choose level">
+          {LEVEL_ORDER.map((lvl) => (
+            <button
+              key={lvl}
+              type="button"
+              class={`level-btn${session.currentLevel === lvl ? " level-btn-active" : ""}`}
+              onClick={() => update((s) => G.switchToLevel(s, lvl))}
+            >
+              {levelTitle(lvl)}
+            </button>
+          ))}
         </div>
         <button type="button" class="btn btn-primary" style={{ marginTop: "1rem" }} onClick={() => update(G.dismissLevelIntro)}>
           Begin level
@@ -148,7 +167,7 @@ function Playing({
 
   const left = G.questionsRemaining(session);
   const done = session.answeredInLevel;
-  const need = G.CARDS_PER_LEVEL;
+  const need = G.cardsRequiredForLevel(session);
   const drawer = session.playerNames[session.drawerIndex] ?? "";
   const answerer = session.playerNames[G.answererIndex(session)] ?? "";
 
@@ -157,13 +176,32 @@ function Playing({
       <p class="card-kicker" style={{ color: "var(--red)", margin: 0 }}>
         {levelTitle(session.currentLevel).toUpperCase()}
       </p>
-      {session.playerNames.length > 1 ? (
+      {session.playMode === "duo" && session.playerNames.length === 2 ? (
         <p style={{ margin: "0.25rem 0 0", fontSize: "1.05rem" }}>
-          {drawer} reads · {answerer} answers
+          {drawer} reads · {answerer} answers — then swap.
+        </p>
+      ) : session.playerNames.length > 1 ? (
+        <p style={{ margin: "0.25rem 0 0", fontSize: "1.05rem" }}>
+          {drawer} reads aloud · everyone answers; tap next when your group is ready.
         </p>
       ) : (
-        <p style={{ margin: "0.25rem 0 0", fontSize: "1.05rem" }}>Solo: read, then answer honestly.</p>
+        <p style={{ margin: "0.25rem 0 0", fontSize: "1.05rem" }}>Add players in setup.</p>
       )}
+      <p class="muted" style={{ margin: "0.75rem 0 0" }}>
+        Level
+      </p>
+      <div class="level-strip" role="group" aria-label="Choose level">
+        {LEVEL_ORDER.map((lvl) => (
+          <button
+            key={lvl}
+            type="button"
+            class={`level-btn${session.currentLevel === lvl ? " level-btn-active" : ""}`}
+            onClick={() => update((s) => G.switchToLevel(s, lvl))}
+          >
+            {levelTitle(lvl)}
+          </button>
+        ))}
+      </div>
       <div class="progress-wrap" style={{ marginTop: "0.75rem" }}>
         <label>
           Progress ({done}/{need} answered)
@@ -191,7 +229,9 @@ function Playing({
         </button>
         {G.drawerCanDig(session) && (
           <button type="button" class="btn btn-ghost" onClick={() => update((s) => G.useDigDeeper(s, s.drawerIndex))}>
-            Dig deeper (reader, once per person)
+            {session.playMode === "duo"
+              ? "Dig deeper (reader — resets next level)"
+              : "Dig deeper (reader — once each, whole game)"}
           </button>
         )}
       </div>
@@ -234,7 +274,7 @@ function CardFace({ card }: { card: Card }) {
             <span class="card-kicker" style={{ opacity: 0.9 }}>
               DIG DEEPER
             </span>
-            <p class="card-body-sentence">{card.text}</p>
+            <p class="card-body card-body-lg">{card.text}</p>
           </div>
           <div class="card-footer" style={{ opacity: 0.35 }}>
             WE'RE NOT REALLY STRANGERS
@@ -248,7 +288,7 @@ function CardFace({ card }: { card: Card }) {
             <span class="card-kicker" style={{ color: "var(--ink)", opacity: 0.45 }}>
               FINAL CARD
             </span>
-            <p class="card-body-sentence">{card.text}</p>
+            <p class="card-body card-body-lg">{card.text}</p>
           </div>
           <div class="card-footer" style={{ color: "var(--ink)", opacity: 0.4 }}>
             WE'RE NOT REALLY STRANGERS

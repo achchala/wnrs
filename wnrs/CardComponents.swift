@@ -78,7 +78,7 @@ struct LevelIntroCardView: View {
                     .tracking(1.2)
                 Text(level.subtitle)
                     .font(Theme.helveticaBold(size: 15))
-                    .textCase(.none)
+                    .textCase(.uppercase)
                     .foregroundStyle(Theme.paper.opacity(0.92))
                     .padding(.top, 6)
             }
@@ -104,6 +104,7 @@ struct WildcardCardView: View {
                     .padding(.bottom, 10)
                 Text(text)
                     .font(Theme.cardBodyFont())
+                    .textCase(.uppercase)
                     .foregroundStyle(Theme.ink)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 22)
@@ -139,6 +140,7 @@ struct DigDeeperCardView: View {
                     .padding(.bottom, 12)
                 Text(text)
                     .font(Theme.helveticaBold(size: 18))
+                    .textCase(.uppercase)
                     .foregroundStyle(Theme.ink)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
@@ -168,7 +170,7 @@ struct FinalCardView: View {
                     .foregroundStyle(Theme.ink.opacity(0.45))
                 Text(text)
                     .font(Theme.helveticaBold(size: 20))
-                    .textCase(.none)
+                    .textCase(.uppercase)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }

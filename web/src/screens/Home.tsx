@@ -13,16 +13,18 @@ export function Home({ onNewGame }: { onNewGame: () => void }) {
         </div>
         <div class="howto">
           <p>
-            Play with 2–6 people. One person draws a card and reads it aloud; the next person answers.
-            After each card, the reader moves clockwise.
+            Matches the usual WNRS box flow: Level 1 Perception, Level 2 Connection, Level 3 Reflection, then a
+            closing prompt (often private notes—like the Final Card).
           </p>
           <p>
-            Work through Perception, Connection, and Reflection. The app tracks at least 15 answered
-            questions per level (wildcards don’t count).
+            Two players: alternate who reads and who answers. Fifteen question cards per level. Dig Deeper
+            refreshes when you start a new level.
+          </p>
+          <p>
+            Group (3–6): one reader, everyone answers your way. When each person has read about twice, move up—here
+            that’s 2×(number of players) question cards per level. Dig Deeper once per person for the whole game.
           </p>
           <p>Wildcards are actions—do them, then tap next turn.</p>
-          <p>Each reader has one “Dig deeper” for the whole game.</p>
-          <p>After the third level, you get one final card.</p>
         </div>
       </div>
     );
@@ -32,17 +34,17 @@ export function Home({ onNewGame }: { onNewGame: () => void }) {
     <div class="stack">
       <div class="stack-grow">
         <h1>
-          We’re Not
+          WE'RE NOT
           <br />
-          Really Strangers
+          REALLY STRANGERS
         </h1>
       </div>
       <div class="row">
         <button type="button" class="btn btn-primary" onClick={onNewGame}>
-          New game
+          NEW GAME
         </button>
         <button type="button" class="btn btn-secondary" onClick={() => setHow(true)}>
-          How to play
+          HOW TO PLAY
         </button>
       </div>
     </div>

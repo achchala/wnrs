@@ -1,7 +1,25 @@
 import type { Card, Level, Phase, QuestionPack } from "./types";
 import { nextLevel } from "./types";
 
-export const CARDS_PER_LEVEL = 15;
+export type PlayMode = "duo" | "group";
+
+/** Duo: 15 question cards per level; Dig Deeper resets each level. Group: 2×players per level; Dig once per person whole game. */
+export function cardsRequiredForLevel(s: GameSession): number {
+  if (s.playMode === "duo") return 15;
+  const n = s.playerNames.length;
+  return Math.max(6, 2 * n);
+}
+
+export function poolForLevel(pack: QuestionPack, level: Level): string[] {
+  switch (level) {
+    case "perception":
+      return pack.perception;
+    case "connection":
+      return pack.connection;
+    case "reflection":
+      return pack.reflection;
+  }
+}
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -18,6 +36,7 @@ function pick<T>(arr: T[]): T {
 
 export interface GameSession {
   pack: QuestionPack;
+  playMode: PlayMode;
   playerNames: string[];
   currentLevel: Level;
   drawerIndex: number;
@@ -33,6 +52,7 @@ export interface GameSession {
 export function createSession(pack: QuestionPack): GameSession {
   return {
     pack,
+    playMode: "duo",
     playerNames: [],
     currentLevel: "perception",
     drawerIndex: 0,
@@ -50,23 +70,51 @@ export function createSession(pack: QuestionPack): GameSession {
   };
 }
 
-export function configurePlayers(s: GameSession, rawNames: string[]): GameSession {
+export function configurePlayers(
+  s: GameSession,
+  rawNames: string[],
+  startLevel: Level,
+  playMode: PlayMode,
+  firstReaderIndex: number,
+): GameSession {
   const fallback = rawNames.map((_, i) => `Player ${i + 1}`);
   const playerNames = rawNames.map((n, i) => {
     const t = n.trim();
     return t.length ? t : fallback[i]!;
   });
+  const n = playerNames.length;
+  const drawer = n > 0 ? firstReaderIndex % n : 0;
   return resetDecks({
     ...s,
+    playMode,
     playerNames,
     digDeeperAvailable: playerNames.map(() => true),
-    drawerIndex: 0,
-    currentLevel: "perception",
+    drawerIndex: drawer,
+    currentLevel: startLevel,
     answeredInLevel: 0,
     currentCard: null,
     showingLevelIntro: true,
     phase: "playing",
   });
+}
+
+/** Jump to another level: fresh shuffled deck; duo refreshes Dig Deeper for that jump. */
+export function switchToLevel(s: GameSession, level: Level): GameSession {
+  if (level === s.currentLevel && s.phase === "playing" && !s.currentCard) {
+    return s;
+  }
+  const dig =
+    s.playMode === "duo" ? s.playerNames.map(() => true) : [...s.digDeeperAvailable];
+  return {
+    ...s,
+    currentLevel: level,
+    answeredInLevel: 0,
+    currentCard: null,
+    showingLevelIntro: true,
+    phase: "playing",
+    digDeeperAvailable: dig,
+    decks: { ...s.decks, [level]: shuffle(poolForLevel(s.pack, level)) },
+  };
 }
 
 function resetDecks(s: GameSession): GameSession {
@@ -141,7 +189,7 @@ export function markAnsweredAndAdvance(s: GameSession): GameSession {
   const n = s.playerNames.length;
   const drawerIndex = n > 0 ? (s.drawerIndex + 1) % n : 0;
   let phase = s.phase;
-  if (wasQ && answeredInLevel >= CARDS_PER_LEVEL && s.phase === "playing") {
+  if (wasQ && answeredInLevel >= cardsRequiredForLevel(s) && s.phase === "playing") {
     phase = "levelComplete";
   }
   return {
@@ -155,21 +203,17 @@ export function markAnsweredAndAdvance(s: GameSession): GameSession {
 
 export function reshuffleLevel(s: GameSession): GameSession {
   const key = s.currentLevel;
-  const pool =
-    key === "perception"
-      ? s.pack.perception
-      : key === "connection"
-        ? s.pack.connection
-        : s.pack.reflection;
   return {
     ...s,
-    decks: { ...s.decks, [key]: shuffle(pool) },
+    decks: { ...s.decks, [key]: shuffle(poolForLevel(s.pack, key)) },
   };
 }
 
 export function continueToNextLevel(s: GameSession): GameSession {
   const n = nextLevel(s.currentLevel);
   if (n) {
+    const dig =
+      s.playMode === "duo" ? s.playerNames.map(() => true) : [...s.digDeeperAvailable];
     return {
       ...s,
       currentLevel: n,
@@ -177,9 +221,14 @@ export function continueToNextLevel(s: GameSession): GameSession {
       showingLevelIntro: true,
       phase: "playing",
       currentCard: null,
+      digDeeperAvailable: dig,
     };
   }
-  const text = pick(s.pack.finalPrompts);
+  const prompts = s.pack.finalPrompts;
+  const text =
+    prompts.length > 0
+      ? pick(prompts)
+      : "Write a private note to each other. Fold, exchange, and read later on your own.";
   return {
     ...s,
     phase: "finale",

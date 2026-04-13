@@ -4,6 +4,14 @@ import Observation
 @MainActor
 @Observable
 final class GameSession {
+    /// Duo (2P): 15 question cards per level; each player’s Dig Deeper resets when you advance a level (wikiHow “each round”).
+    /// Group (3–6P): each player reads at least twice per level → `2 × playerCount` questions; Dig Deeper once per person for the whole game (shared-tile style).
+    enum PlayMode: String, Equatable, Hashable {
+        case duo
+        case group
+    }
+
+    private(set) var playMode: PlayMode = .duo
     private(set) var playerNames: [String] = []
     private(set) var currentLevel: GameLevel = .perception
     private(set) var drawerIndex: Int = 0
@@ -12,14 +20,19 @@ final class GameSession {
     private(set) var showingLevelIntro = true
     private(set) var phase: Phase = .playing
 
-    /// One dig-deeper per player for the session; index aligns with `playerNames`.
+    /// Dig Deeper: index aligns with `playerNames`. Duo: resets each level. Group: one use per person for the whole session.
     private(set) var digDeeperAvailable: [Bool] = []
 
     private let pack: QuestionPack
     private var decks: [GameLevel: [String]] = [:]
     private var wildPile: [String] = []
 
-    let cardsRequiredPerLevel = 15
+    var cardsRequiredForCurrentLevel: Int {
+        switch playMode {
+        case .duo: return 15
+        case .group: return max(6, 2 * playerCount)
+        }
+    }
 
     enum Phase {
         case playing
@@ -48,13 +61,15 @@ final class GameSession {
         decks[currentLevel]?.count ?? 0
     }
 
-    func configure(playerNames names: [String]) {
+    func configure(playerNames names: [String], mode: PlayMode, firstReaderIndex: Int = 0) {
         let trimmed = names.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
         let fallback = (1...names.count).map { "Player \($0)" }
         playerNames = zip(trimmed, fallback).map { a, b in a.isEmpty ? b : a }
+        playMode = mode
         digDeeperAvailable = Array(repeating: true, count: playerNames.count)
         resetDecks()
-        drawerIndex = 0
+        let n = playerNames.count
+        drawerIndex = n > 0 ? firstReaderIndex % n : 0
         currentLevel = .perception
         answeredInLevel = 0
         currentCard = nil
@@ -101,7 +116,7 @@ final class GameSession {
         guard playerCount > 0 else { return }
         drawerIndex = (drawerIndex + 1) % playerCount
 
-        if wasLevelQuestion, answeredInLevel >= cardsRequiredPerLevel, phase == .playing {
+        if wasLevelQuestion, answeredInLevel >= cardsRequiredForCurrentLevel, phase == .playing {
             phase = .levelComplete
         }
     }
@@ -121,6 +136,9 @@ final class GameSession {
             showingLevelIntro = true
             phase = .playing
             currentCard = nil
+            if playMode == .duo {
+                digDeeperAvailable = Array(repeating: true, count: playerNames.count)
+            }
         } else {
             startFinale()
         }
@@ -132,7 +150,8 @@ final class GameSession {
 
     func startFinale() {
         phase = .finale
-        let line = pack.finalPrompts.randomElement() ?? "Before you go—what are you taking away from this?"
+        let line = pack.finalPrompts.randomElement()
+            ?? "Write a private note to each other. Fold them, exchange, and read later on your own—like the Final Card in the box."
         currentCard = .finalThought(line)
     }
 

@@ -61,14 +61,14 @@ struct HomeView: View {
             Theme.paper.ignoresSafeArea()
             VStack(spacing: 20) {
                 Spacer()
-                Text("We’re Not\nReally Strangers")
+                Text("WE'RE NOT\nREALLY STRANGERS")
                     .font(Theme.helveticaBold(size: 34))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Theme.ink)
                 Spacer()
                 VStack(spacing: 12) {
                     Button(action: onNewGame) {
-                        Text("New game")
+                        Text("NEW GAME")
                             .font(Theme.helveticaBold(size: 17))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
@@ -77,7 +77,7 @@ struct HomeView: View {
                     .tint(Theme.red)
 
                     Button(action: onHowToPlay) {
-                        Text("How to play")
+                        Text("HOW TO PLAY")
                             .font(Theme.helveticaBold(size: 17))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
@@ -95,61 +95,115 @@ struct HomeView: View {
 struct SetupView: View {
     var session: GameSession
     let onStart: () -> Void
-    @State private var count = 2
+    @State private var mode: GameSession.PlayMode = .duo
+    @State private var groupCount = 3
     @State private var names: [String] = ["", ""]
+    @State private var firstReaderIndex = 0
     @Environment(\.dismiss) private var dismiss
+
+    private var activeCount: Int {
+        mode == .duo ? 2 : groupCount
+    }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Group")
+                Text("How you’re playing")
                     .font(Theme.helveticaBold(size: 13))
-                Stepper(value: $count, in: 2...6) {
-                    Text("\(count) players")
-                        .font(Theme.helveticaBold(size: 17))
+                Picker("Mode", selection: $mode) {
+                    Text("Two players").tag(GameSession.PlayMode.duo)
+                    Text("Group (3–6)").tag(GameSession.PlayMode.group)
                 }
-                .onChange(of: count) { _, newValue in
-                    if names.count < newValue {
-                        names.append(contentsOf: Array(repeating: "", count: newValue - names.count))
-                    } else if names.count > newValue {
-                        names = Array(names.prefix(newValue))
+                .pickerStyle(.segmented)
+                .onChange(of: mode) { _, new in
+                    syncNames(for: new)
+                }
+
+                if mode == .group {
+                    Stepper(value: $groupCount, in: 3...6) {
+                        Text("\(groupCount) players")
+                            .font(Theme.helveticaBold(size: 17))
+                    }
+                    .onChange(of: groupCount) { _, _ in
+                        syncNames(for: mode)
                     }
                 }
 
                 Text("Names")
                     .font(Theme.helveticaBold(size: 13))
                     .padding(.top, 8)
-                ForEach(0..<count, id: \.self) { i in
+                ForEach(0..<activeCount, id: \.self) { i in
                     TextField("Player \(i + 1) name (optional)", text: $names[i])
                         .textFieldStyle(.roundedBorder)
                 }
 
-                Text("Turns rotate automatically: one person reads the card, the next person answers.")
+                if mode == .duo {
+                    Text("Who reads the first card? (Tip: wikiHow suggests a staring contest—first to blink is Player 1.)")
+                        .font(Theme.helvetica(size: 13))
+                        .foregroundStyle(Theme.ink.opacity(0.55))
+                        .padding(.top, 4)
+                    Picker("First reader", selection: $firstReaderIndex) {
+                        Text(labelForPlayer(0)).tag(0)
+                        Text(labelForPlayer(1)).tag(1)
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                Text(footerHint)
                     .font(Theme.helvetica(size: 13))
                     .foregroundStyle(Theme.ink.opacity(0.55))
                     .padding(.top, 4)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(20)
+            .textCase(.uppercase)
         }
         .background(Theme.paper)
-        .navigationTitle("Setup")
+        .navigationTitle("SETUP")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button { dismiss() } label: {
-                    Text("Back").font(Theme.helveticaBold(size: 17))
+                    Text("Back").font(Theme.helveticaBold(size: 17)).textCase(.uppercase)
                 }
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button {
-                    session.configure(playerNames: Array(names.prefix(count)))
+                    session.configure(
+                        playerNames: Array(names.prefix(activeCount)),
+                        mode: mode,
+                        firstReaderIndex: mode == .duo ? firstReaderIndex : 0
+                    )
                     onStart()
                 } label: {
-                    Text("Start").font(Theme.helveticaBold(size: 17))
+                    Text("Start").font(Theme.helveticaBold(size: 17)).textCase(.uppercase)
                 }
             }
         }
+    }
+
+    private var footerHint: String {
+        switch mode {
+        case .duo:
+            return "Duo: alternate—one reads a Level 1 question, the other answers (then swap). After 15 Level 1 answers, move to Level 2, then Level 3. Dig Deeper resets each level."
+        case .group:
+            return "Group: reader reads aloud; everyone answers in your own way. When each person has been reader at least twice, move up a level (app tracks \(2 * activeCount) question cards per level). Dig Deeper: once per person for the whole game."
+        }
+    }
+
+    private func labelForPlayer(_ i: Int) -> String {
+        let n = names[i].trimmingCharacters(in: .whitespacesAndNewlines)
+        return n.isEmpty ? "Player \(i + 1)" : n
+    }
+
+    private func syncNames(for mode: GameSession.PlayMode) {
+        let target = mode == .duo ? 2 : groupCount
+        if names.count < target {
+            names.append(contentsOf: Array(repeating: "", count: target - names.count))
+        } else if names.count > target {
+            names = Array(names.prefix(target))
+        }
+        firstReaderIndex = min(firstReaderIndex, 1)
     }
 }
 
@@ -157,18 +211,18 @@ struct HowToPlayView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("Play with 2–6 people. One person draws a card and reads it aloud; the next person answers. Take turns—after each card, the reader role moves clockwise.")
-                Text("Work through three levels: Perception, Connection, and Reflection. The app tracks at least 15 answered questions per level (wildcards don’t count toward that minimum).")
-                Text("Wildcards are actions—do what they say, then tap done when you’re finished.")
-                Text("Each reader still has a single “Dig deeper” prompt for the whole game, like the clear card in the box.")
-                Text("After the third level, you’ll get one final card to close the session.")
+                Text("This app follows the usual WNRS flow (like the boxed game): Level 1 Perception → Level 2 Connection → Level 3 Reflection, then a final closing prompt. Wildcards are actions—do them, then tap next turn.")
+                Text("Two players: alternate who reads and who answers. Use Dig Deeper when someone’s answer feels shallow—each of you gets a fresh Dig Deeper when you start a new level. Move up after 15 question cards at that level.")
+                Text("Group (3–6): one reader, everyone answers however you like (out loud or popcorn). Move up after each person has read at least twice—here that means \(2)×(number of players) question cards per level. Dig Deeper: once per person for the whole game, like one tile in the middle.")
+                Text("End: use the final card as a cue—often you’ll write private notes, fold them, exchange, and read later.")
             }
             .font(Theme.helveticaBold(size: 16))
             .foregroundStyle(Theme.ink.opacity(0.85))
             .padding(20)
+            .textCase(.uppercase)
         }
         .background(Theme.paper)
-        .navigationTitle("How to play")
+        .navigationTitle("HOW TO PLAY")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -182,7 +236,7 @@ struct PlayView: View {
             Theme.paper.ignoresSafeArea()
             content
         }
-        .navigationTitle("Game")
+        .navigationTitle("GAME")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar {
@@ -190,7 +244,7 @@ struct PlayView: View {
                 Button {
                     onExitToHome()
                 } label: {
-                    Text("End").font(Theme.helveticaBold(size: 17))
+                    Text("End").font(Theme.helveticaBold(size: 17)).textCase(.uppercase)
                 }
             }
         }
@@ -298,7 +352,9 @@ private struct PlayingBoardView: View {
                                 Haptics.rigidImpact()
                                 session.useDigDeeper(forPlayerIndex: session.drawerIndex)
                             } label: {
-                                Text("Dig deeper (reader, once per person)")
+                                Text(session.playMode == .duo
+                                    ? "Dig deeper (reader — resets next level)"
+                                    : "Dig deeper (reader — once each, whole game)")
                                     .font(Theme.helveticaBold(size: 15))
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
@@ -312,6 +368,7 @@ private struct PlayingBoardView: View {
                 }
             }
         }
+        .textCase(.uppercase)
         .onAppear { Haptics.prepare() }
     }
 
@@ -330,6 +387,15 @@ private struct PlayingBoardView: View {
     }
 }
 
+private func levelCompleteBlurb(_ session: GameSession) -> String {
+    let need = session.cardsRequiredForCurrentLevel
+    let title = session.currentLevel.title
+    if session.playMode == .duo {
+        return "You’ve answered at least \(need) question cards in \(title). Move on when you’re ready—Dig Deeper refreshes for both of you in the next level."
+    }
+    return "You’ve reached \(need) question cards in \(title) (each person has been reader about twice). Move on when the group is ready."
+}
+
 private struct TurnStrip: View {
     var session: GameSession
 
@@ -339,12 +405,16 @@ private struct TurnStrip: View {
                 .font(Theme.helveticaBold(size: 12))
                 .tracking(1.6)
                 .foregroundStyle(Theme.red.opacity(0.55))
-            if session.playerCount > 1 {
-                Text("\(session.playerNames[session.drawerIndex]) reads · \(session.playerNames[session.answererIndex]) answers")
+            if session.playMode == .duo, session.playerCount == 2 {
+                Text("\(session.playerNames[session.drawerIndex]) reads · \(session.playerNames[session.answererIndex]) answers — then swap.")
+                    .font(Theme.helveticaBold(size: 17))
+                    .foregroundStyle(Theme.ink)
+            } else if session.playerCount > 1 {
+                Text("\(session.playerNames[session.drawerIndex]) reads aloud · everyone answers; tap next when your group is ready.")
                     .font(Theme.helveticaBold(size: 17))
                     .foregroundStyle(Theme.ink)
             } else {
-                Text("Solo mode: read, then answer honestly.")
+                Text("Add players in setup.")
                     .font(Theme.helveticaBold(size: 17))
                     .foregroundStyle(Theme.ink)
             }
@@ -360,7 +430,7 @@ private struct ProgressStrip: View {
 
     var body: some View {
         let done = session.answeredInLevel
-        let need = session.cardsRequiredPerLevel
+        let need = session.cardsRequiredForCurrentLevel
         VStack(alignment: .leading, spacing: 8) {
             Text("Progress toward next level (\(done)/\(need) answered)")
                 .font(Theme.helveticaBold(size: 13))
@@ -382,7 +452,7 @@ private struct LevelGateView: View {
             Spacer()
             Text("Level complete")
                 .font(Theme.helveticaBold(size: 28))
-            Text("You’ve answered at least \(session.cardsRequiredPerLevel) questions in \(session.currentLevel.title). Move on when the group feels ready.")
+            Text(levelCompleteBlurb(session))
                 .font(Theme.helvetica(size: 16))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Theme.ink.opacity(0.6))
@@ -412,6 +482,7 @@ private struct LevelGateView: View {
             .padding(.horizontal, 24)
             Spacer()
         }
+        .textCase(.uppercase)
     }
 }
 
@@ -434,6 +505,7 @@ private struct FinaleView: View {
             .tint(Theme.red)
             Spacer()
         }
+        .textCase(.uppercase)
     }
 }
 
@@ -446,7 +518,7 @@ private struct SessionDoneView: View {
             Spacer()
             Text("That’s a wrap")
                 .font(Theme.helveticaBold(size: 28))
-            Text("Take a breath. Nothing here was saved—just people talking.")
+            Text("Take a breath. Nothing was saved in the app—if you exchanged notes, save those yourself.")
                 .font(Theme.helvetica(size: 16))
                 .foregroundStyle(Theme.ink.opacity(0.55))
                 .multilineTextAlignment(.center)
@@ -472,6 +544,7 @@ private struct SessionDoneView: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 28)
         }
+        .textCase(.uppercase)
     }
 }
 

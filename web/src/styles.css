@@ -31,6 +31,7 @@ body {
   min-height: 100dvh;
   padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
     max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  text-transform: uppercase;
 }
 
 .stack {
@@ -191,9 +192,9 @@ input[type="text"] {
   text-transform: uppercase;
 }
 
-.card-body-sentence {
-  text-transform: none;
+.card-body-lg {
   font-size: 1.1rem;
+  line-height: 1.35;
 }
 
 .card-footer {
@@ -241,4 +242,32 @@ progress {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.level-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.level-btn {
+  flex: 1 1 30%;
+  min-width: 5.5rem;
+  padding: 0.55rem 0.4rem;
+  border-radius: 10px;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.level-btn-active {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--paper);
 }
