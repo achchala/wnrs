@@ -18,7 +18,8 @@ private enum Haptics {
 }
 
 struct RootView: View {
-    @State private var session = GameSession()
+    @State private var selectedPackIndex = 0
+    @State private var session = GameSession(pack: PackLoader.options[0].pack)
     @State private var path = NavigationPath()
 
     var body: some View {
@@ -30,7 +31,7 @@ struct RootView: View {
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .setup:
-                    SetupView(session: session) {
+                    SetupView(selectedPackIndex: $selectedPackIndex, session: session) {
                         path.append(Route.play)
                     }
                 case .play:
@@ -43,6 +44,11 @@ struct RootView: View {
             }
         }
         .tint(Theme.red)
+        .onChange(of: selectedPackIndex) { _, i in
+            let opts = PackLoader.options
+            guard i >= 0, i < opts.count else { return }
+            session = GameSession(pack: opts[i].pack)
+        }
     }
 }
 
@@ -93,6 +99,7 @@ struct HomeView: View {
 }
 
 struct SetupView: View {
+    @Binding var selectedPackIndex: Int
     var session: GameSession
     let onStart: () -> Void
     @State private var mode: GameSession.PlayMode = .duo
@@ -108,8 +115,18 @@ struct SetupView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                Text("Card deck")
+                    .font(Theme.helveticaBold(size: 13))
+                Picker("Card deck", selection: $selectedPackIndex) {
+                    ForEach(Array(PackLoader.options.enumerated()), id: \.offset) { i, opt in
+                        Text(opt.title).tag(i)
+                    }
+                }
+                .pickerStyle(.segmented)
+
                 Text("How you’re playing")
                     .font(Theme.helveticaBold(size: 13))
+                    .padding(.top, 4)
                 Picker("Mode", selection: $mode) {
                     Text("Two players").tag(GameSession.PlayMode.duo)
                     Text("Group (3–6)").tag(GameSession.PlayMode.group)
@@ -270,7 +287,21 @@ private struct PlayingBoardView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if session.showingLevelIntro {
+            if session.showingPackIntro {
+                VStack(spacing: 18) {
+                    PackIntroCardView(paragraphs: session.packIntroParagraphs)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 12)
+                    Button {
+                        session.dismissPackIntro()
+                    } label: {
+                        Text("Continue").font(Theme.helveticaBold(size: 17))
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Theme.red)
+                    Spacer()
+                }
+            } else if session.showingLevelIntro {
                 VStack(spacing: 18) {
                     LevelIntroCardView(level: session.currentLevel)
                         .padding(.horizontal, 20)

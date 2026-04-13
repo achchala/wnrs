@@ -18,6 +18,8 @@ final class GameSession {
     private(set) var answeredInLevel: Int = 0
     private(set) var currentCard: CardKind?
     private(set) var showingLevelIntro = true
+    /// Shown before Level 1 when `pack.introParagraphs` is non-empty.
+    private(set) var showingPackIntro = false
     private(set) var phase: Phase = .playing
 
     /// Dig Deeper: index aligns with `playerNames`. Duo: resets each level. Group: one use per person for the whole session.
@@ -41,11 +43,13 @@ final class GameSession {
         case done
     }
 
-    init(pack: QuestionPack = PackLoader.pack) {
+    init(pack: QuestionPack = PackLoader.defaultPack) {
         self.pack = pack
     }
 
     var playerCount: Int { playerNames.count }
+
+    var packIntroParagraphs: [String] { pack.introParagraphs ?? [] }
 
     var answererIndex: Int {
         guard playerCount > 1 else { return 0 }
@@ -73,8 +77,14 @@ final class GameSession {
         currentLevel = .perception
         answeredInLevel = 0
         currentCard = nil
+        let hasPackIntro = !(pack.introParagraphs ?? []).isEmpty
+        showingPackIntro = hasPackIntro
         showingLevelIntro = true
         phase = .playing
+    }
+
+    func dismissPackIntro() {
+        showingPackIntro = false
     }
 
     func dismissLevelIntro() {
@@ -166,6 +176,7 @@ final class GameSession {
         currentLevel = .perception
         answeredInLevel = 0
         currentCard = nil
+        showingPackIntro = !(pack.introParagraphs ?? []).isEmpty
         showingLevelIntro = true
         phase = .playing
         digDeeperAvailable = Array(repeating: true, count: playerNames.count)

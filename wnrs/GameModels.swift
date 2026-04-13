@@ -41,6 +41,8 @@ enum GameLevel: String, Codable, CaseIterable, Identifiable {
 }
 
 struct QuestionPack: Codable {
+    /// Expansion-only screens shown before Level 1 (e.g. Honest Dating intro).
+    var introParagraphs: [String]?
     var perception: [String]
     var connection: [String]
     var reflection: [String]
@@ -57,26 +59,43 @@ enum CardKind: Equatable {
 }
 
 enum PackLoader {
-    /// Parsed once for the lifetime of the process (no repeat JSON decode).
-    static let pack: QuestionPack = loadOnce()
+    struct Option: Identifiable {
+        let id: String
+        let title: String
+        let pack: QuestionPack
+    }
 
-    private static func loadOnce() -> QuestionPack {
-        if let url = Bundle.main.url(forResource: "questions", withExtension: "json"),
-           let data = try? Data(contentsOf: url),
-           let pack = try? JSONDecoder().decode(QuestionPack.self, from: data) {
-            return pack
+    /// All playable decks bundled with the app.
+    static let options: [Option] = loadOptions()
+
+    static var defaultPack: QuestionPack { options.first?.pack ?? fallbackPack }
+
+    private static func loadOptions() -> [Option] {
+        var out: [Option] = []
+        if let p = loadJSON("questions") {
+            out.append(Option(id: "core", title: "Original", pack: p))
         }
-        #if DEBUG
-        assertionFailure(
-            "questions.json missing or invalid — ensure WNRS/Resources/questions.json is in “Copy Bundle Resources”."
-        )
-        #endif
-        // Avoid fatalError on the main thread in shipped builds; lets the UI load with a visible fallback.
-        return QuestionPack(
-            perception: ["Bundle error: add questions.json to the app target."],
-            connection: ["Bundle error: add questions.json to the app target."],
-            reflection: ["Bundle error: add questions.json to the app target."],
-            wildcards: ["Fix Copy Bundle Resources for questions.json."],
+        if let p = loadJSON("honest-dating") {
+            out.append(Option(id: "honest-dating", title: "Honest dating", pack: p))
+        }
+        if out.isEmpty { out.append(Option(id: "fallback", title: "Fallback", pack: fallbackPack)) }
+        return out
+    }
+
+    private static func loadJSON(_ name: String) -> QuestionPack? {
+        guard let url = Bundle.main.url(forResource: name, withExtension: "json"),
+              let data = try? Data(contentsOf: url),
+              let pack = try? JSONDecoder().decode(QuestionPack.self, from: data) else { return nil }
+        return pack
+    }
+
+    private static var fallbackPack: QuestionPack {
+        QuestionPack(
+            introParagraphs: nil,
+            perception: ["Bundle error: add JSON packs to Copy Bundle Resources."],
+            connection: ["Bundle error: add JSON packs to Copy Bundle Resources."],
+            reflection: ["Bundle error: add JSON packs to Copy Bundle Resources."],
+            wildcards: ["Fix Copy Bundle Resources for question JSON files."],
             digDeeper: ["Say more about that."],
             finalPrompts: ["What are you taking away from tonight?"]
         )

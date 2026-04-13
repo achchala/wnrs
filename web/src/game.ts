@@ -42,6 +42,7 @@ export interface GameSession {
   drawerIndex: number;
   answeredInLevel: number;
   currentCard: Card | null;
+  showingPackIntro: boolean;
   showingLevelIntro: boolean;
   phase: Phase;
   digDeeperAvailable: boolean[];
@@ -58,6 +59,7 @@ export function createSession(pack: QuestionPack): GameSession {
     drawerIndex: 0,
     answeredInLevel: 0,
     currentCard: null,
+    showingPackIntro: false,
     showingLevelIntro: true,
     phase: "playing",
     digDeeperAvailable: [],
@@ -84,6 +86,8 @@ export function configurePlayers(
   });
   const n = playerNames.length;
   const drawer = n > 0 ? firstReaderIndex % n : 0;
+  const hasPackIntro =
+    startLevel === "perception" && (s.pack.introParagraphs?.length ?? 0) > 0;
   return resetDecks({
     ...s,
     playMode,
@@ -93,6 +97,7 @@ export function configurePlayers(
     currentLevel: startLevel,
     answeredInLevel: 0,
     currentCard: null,
+    showingPackIntro: hasPackIntro,
     showingLevelIntro: true,
     phase: "playing",
   });
@@ -110,6 +115,7 @@ export function switchToLevel(s: GameSession, level: Level): GameSession {
     currentLevel: level,
     answeredInLevel: 0,
     currentCard: null,
+    showingPackIntro: false,
     showingLevelIntro: true,
     phase: "playing",
     digDeeperAvailable: dig,
@@ -130,16 +136,22 @@ function resetDecks(s: GameSession): GameSession {
 }
 
 export function newGameSamePlayers(s: GameSession): GameSession {
+  const hasPackIntro = (s.pack.introParagraphs?.length ?? 0) > 0;
   return resetDecks({
     ...s,
     drawerIndex: 0,
     currentLevel: "perception",
     answeredInLevel: 0,
     currentCard: null,
+    showingPackIntro: hasPackIntro,
     showingLevelIntro: true,
     phase: "playing",
     digDeeperAvailable: s.playerNames.map(() => true),
   });
+}
+
+export function dismissPackIntro(s: GameSession): GameSession {
+  return { ...s, showingPackIntro: false };
 }
 
 export function dismissLevelIntro(s: GameSession): GameSession {

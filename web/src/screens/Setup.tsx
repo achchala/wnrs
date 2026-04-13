@@ -1,14 +1,23 @@
 import { useState } from "preact/hooks";
-import { LEVEL_ORDER, levelTitle, type Level } from "../types";
+import { LEVEL_ORDER, levelTitle, type Level, type PackOption, type QuestionPack } from "../types";
 import type { PlayMode } from "../game";
 
 export function Setup({
+  packOptions,
   onBack,
   onStart,
 }: {
+  packOptions: PackOption[];
   onBack: () => void;
-  onStart: (names: string[], startLevel: Level, mode: PlayMode, firstReaderIndex: number) => void;
+  onStart: (
+    pack: QuestionPack,
+    names: string[],
+    startLevel: Level,
+    mode: PlayMode,
+    firstReaderIndex: number,
+  ) => void;
 }) {
+  const [packIndex, setPackIndex] = useState(0);
   const [mode, setMode] = useState<PlayMode>("duo");
   const [groupCount, setGroupCount] = useState(3);
   const [names, setNames] = useState<string[]>(["", ""]);
@@ -58,6 +67,22 @@ export function Setup({
         </button>
       </div>
       <p class="muted" style={{ margin: 0 }}>
+        Card deck
+      </p>
+      <div class="level-strip" role="group" aria-label="Card deck">
+        {packOptions.map((opt, i) => (
+          <button
+            key={opt.id}
+            type="button"
+            class={`level-btn${packIndex === i ? " level-btn-active" : ""}`}
+            onClick={() => setPackIndex(i)}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      <p class="muted" style={{ margin: "0.75rem 0 0" }}>
         How you’re playing
       </p>
       <div class="level-strip" role="group" aria-label="Play mode">
@@ -162,7 +187,15 @@ export function Setup({
         type="button"
         class="btn btn-primary"
         style={{ marginTop: "auto" }}
-        onClick={() => onStart(names.slice(0, activeCount), startLevel, mode, mode === "duo" ? firstReaderIndex : 0)}
+        onClick={() =>
+          onStart(
+            packOptions[packIndex]!.pack,
+            names.slice(0, activeCount),
+            startLevel,
+            mode,
+            mode === "duo" ? firstReaderIndex : 0,
+          )
+        }
       >
         Start
       </button>

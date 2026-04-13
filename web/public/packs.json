@@ -1,0 +1,12 @@
+[
+  {
+    "id": "core",
+    "label": "Original",
+    "file": "questions.json"
+  },
+  {
+    "id": "honest-dating",
+    "label": "Honest dating",
+    "file": "honest-dating.json"
+  }
+]

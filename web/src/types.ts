@@ -3,6 +3,8 @@ export type Level = "perception" | "connection" | "reflection";
 export type Phase = "playing" | "levelComplete" | "finale" | "done";
 
 export interface QuestionPack {
+  /** Expansion intro before Level 1 (optional). */
+  introParagraphs?: string[];
   perception: string[];
   connection: string[];
   reflection: string[];
@@ -10,6 +12,8 @@ export interface QuestionPack {
   digDeeper: string[];
   finalPrompts: string[];
 }
+
+export type PackOption = { id: string; label: string; pack: QuestionPack };
 
 export type Card =
   | { kind: "question"; text: string; level: Level }

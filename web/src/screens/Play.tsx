@@ -113,6 +113,43 @@ function Playing({
   session: GameSession;
   update: (fn: (s: GameSession) => GameSession) => void;
 }) {
+  if (session.showingPackIntro) {
+    const paras = session.pack.introParagraphs ?? [];
+    return (
+      <div class="stack-grow">
+        <div class="card card-red" style={{ maxHeight: "min(70vh, 28rem)", overflow: "auto" }}>
+          <div class="card-inner" style={{ textAlign: "left", alignItems: "stretch" }}>
+            {paras.map((line, i) => (
+              <p
+                key={i}
+                class="card-body"
+                style={{
+                  color: "var(--paper)",
+                  margin: i > 0 ? "1rem 0 0" : 0,
+                  fontWeight: 700,
+                  lineHeight: 1.45,
+                }}
+              >
+                {line}
+              </p>
+            ))}
+          </div>
+          <div class="card-footer" style={{ color: "rgba(255,255,255,0.85)" }}>
+            WE'RE NOT REALLY STRANGERS
+          </div>
+        </div>
+        <button
+          type="button"
+          class="btn btn-primary"
+          style={{ marginTop: "1rem" }}
+          onClick={() => update(G.dismissPackIntro)}
+        >
+          Continue
+        </button>
+      </div>
+    );
+  }
+
   if (session.showingLevelIntro) {
     return (
       <div class="stack-grow">

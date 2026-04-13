@@ -63,6 +63,29 @@ struct QuestionCardView: View {
     }
 }
 
+struct PackIntroCardView: View {
+    let paragraphs: [String]
+
+    var body: some View {
+        CardChrome(background: Theme.red, foreground: Theme.paper) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    ForEach(Array(paragraphs.enumerated()), id: \.offset) { _, line in
+                        Text(line)
+                            .font(Theme.helveticaBold(size: 16))
+                            .textCase(.uppercase)
+                            .foregroundStyle(Theme.paper.opacity(0.95))
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+            .frame(maxHeight: 360)
+        }
+    }
+}
+
 struct LevelIntroCardView: View {
     let level: GameLevel
 
