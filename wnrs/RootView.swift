@@ -1,8 +1,24 @@
 import SwiftUI
 import UIKit
 
+private enum Haptics {
+    private static let light = UIImpactFeedbackGenerator(style: .light)
+    private static let soft = UIImpactFeedbackGenerator(style: .soft)
+    private static let rigid = UIImpactFeedbackGenerator(style: .rigid)
+
+    static func prepare() {
+        light.prepare()
+        soft.prepare()
+        rigid.prepare()
+    }
+
+    static func lightImpact() { light.impactOccurred() }
+    static func softImpact() { soft.impactOccurred() }
+    static func rigidImpact() { rigid.impactOccurred() }
+}
+
 struct RootView: View {
-    @StateObject private var session = GameSession()
+    @State private var session = GameSession()
     @State private var path = NavigationPath()
 
     var body: some View {
@@ -46,19 +62,14 @@ struct HomeView: View {
             VStack(spacing: 20) {
                 Spacer()
                 Text("We’re Not\nReally Strangers")
-                    .font(.system(size: 34, weight: .heavy, design: .default))
+                    .font(Theme.helveticaBold(size: 34))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Theme.ink)
-                Text("A quiet phone version—no accounts, no servers.")
-                    .font(.system(size: 16, weight: .regular, design: .default))
-                    .foregroundStyle(Theme.ink.opacity(0.55))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 28)
                 Spacer()
                 VStack(spacing: 12) {
                     Button(action: onNewGame) {
                         Text("New game")
-                            .font(.system(size: 17, weight: .semibold, design: .default))
+                            .font(Theme.helveticaBold(size: 17))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                     }
@@ -67,7 +78,7 @@ struct HomeView: View {
 
                     Button(action: onHowToPlay) {
                         Text("How to play")
-                            .font(.system(size: 17, weight: .semibold, design: .default))
+                            .font(Theme.helveticaBold(size: 17))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                     }
@@ -82,17 +93,20 @@ struct HomeView: View {
 }
 
 struct SetupView: View {
-    @ObservedObject var session: GameSession
+    var session: GameSession
     let onStart: () -> Void
     @State private var count = 2
     @State private var names: [String] = ["", ""]
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        Form {
-            Section {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text("Group")
+                    .font(Theme.helveticaBold(size: 13))
                 Stepper(value: $count, in: 2...6) {
                     Text("\(count) players")
+                        .font(Theme.helveticaBold(size: 17))
                 }
                 .onChange(of: count) { _, newValue in
                     if names.count < newValue {
@@ -101,30 +115,38 @@ struct SetupView: View {
                         names = Array(names.prefix(newValue))
                     }
                 }
-            } header: {
-                Text("Group")
-            }
 
-            Section {
+                Text("Names")
+                    .font(Theme.helveticaBold(size: 13))
+                    .padding(.top, 8)
                 ForEach(0..<count, id: \.self) { i in
                     TextField("Player \(i + 1) name (optional)", text: $names[i])
+                        .textFieldStyle(.roundedBorder)
                 }
-            } header: {
-                Text("Names")
-            } footer: {
+
                 Text("Turns rotate automatically: one person reads the card, the next person answers.")
+                    .font(Theme.helvetica(size: 13))
+                    .foregroundStyle(Theme.ink.opacity(0.55))
+                    .padding(.top, 4)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(20)
         }
+        .background(Theme.paper)
         .navigationTitle("Setup")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Back") { dismiss() }
+                Button { dismiss() } label: {
+                    Text("Back").font(Theme.helveticaBold(size: 17))
+                }
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button("Start") {
+                Button {
                     session.configure(playerNames: Array(names.prefix(count)))
                     onStart()
+                } label: {
+                    Text("Start").font(Theme.helveticaBold(size: 17))
                 }
             }
         }
@@ -141,7 +163,7 @@ struct HowToPlayView: View {
                 Text("Each reader still has a single “Dig deeper” prompt for the whole game, like the clear card in the box.")
                 Text("After the third level, you’ll get one final card to close the session.")
             }
-            .font(.system(size: 16, weight: .regular, design: .default))
+            .font(Theme.helveticaBold(size: 16))
             .foregroundStyle(Theme.ink.opacity(0.85))
             .padding(20)
         }
@@ -152,7 +174,7 @@ struct HowToPlayView: View {
 }
 
 struct PlayView: View {
-    @ObservedObject var session: GameSession
+    var session: GameSession
     let onExitToHome: () -> Void
 
     var body: some View {
@@ -165,8 +187,10 @@ struct PlayView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("End") {
+                Button {
                     onExitToHome()
+                } label: {
+                    Text("End").font(Theme.helveticaBold(size: 17))
                 }
             }
         }
@@ -188,7 +212,7 @@ struct PlayView: View {
 }
 
 private struct PlayingBoardView: View {
-    @ObservedObject var session: GameSession
+    var session: GameSession
 
     var body: some View {
         VStack(spacing: 0) {
@@ -197,8 +221,10 @@ private struct PlayingBoardView: View {
                     LevelIntroCardView(level: session.currentLevel)
                         .padding(.horizontal, 20)
                         .padding(.top, 12)
-                    Button("Begin level") {
+                    Button {
                         session.dismissLevelIntro()
+                    } label: {
+                        Text("Begin level").font(Theme.helveticaBold(size: 17))
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Theme.red)
@@ -209,8 +235,10 @@ private struct PlayingBoardView: View {
                     cardView(for: card)
                         .padding(.horizontal, 20)
                         .padding(.top, 8)
-                    Button("Next turn") {
+                    Button {
                         session.markAnsweredAndAdvance()
+                    } label: {
+                        Text("Next turn").font(Theme.helveticaBold(size: 17))
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Theme.red)
@@ -222,7 +250,7 @@ private struct PlayingBoardView: View {
                     ProgressStrip(session: session)
                     if session.questionsRemainingInLevel == 0 {
                         Text("You’ve gone through every card in this level. Reshuffle to keep playing here, or finish the level when you’re ready.")
-                            .font(.system(size: 14, weight: .medium, design: .default))
+                            .font(Theme.helveticaBold(size: 14))
                             .foregroundStyle(Theme.ink.opacity(0.5))
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 22)
@@ -234,7 +262,7 @@ private struct PlayingBoardView: View {
                                 session.reshuffleCurrentLevelDeck()
                             } label: {
                                 Text("Reshuffle this level")
-                                    .font(.system(size: 17, weight: .semibold, design: .default))
+                                    .font(Theme.helveticaBold(size: 17))
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 16)
                             }
@@ -242,11 +270,11 @@ private struct PlayingBoardView: View {
                             .tint(Theme.red)
                         } else {
                             Button {
-                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                Haptics.lightImpact()
                                 session.drawNextQuestionCard()
                             } label: {
                                 Text("Pull a question")
-                                    .font(.system(size: 17, weight: .semibold, design: .default))
+                                    .font(Theme.helveticaBold(size: 17))
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 16)
                             }
@@ -255,11 +283,11 @@ private struct PlayingBoardView: View {
                         }
 
                         Button {
-                            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+                            Haptics.softImpact()
                             session.drawWildcard()
                         } label: {
                             Text("Pull a wildcard")
-                                .font(.system(size: 17, weight: .semibold, design: .default))
+                                .font(Theme.helveticaBold(size: 17))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
                         }
@@ -267,11 +295,11 @@ private struct PlayingBoardView: View {
 
                         if session.currentDrawerCanDigDeeper {
                             Button {
-                                UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+                                Haptics.rigidImpact()
                                 session.useDigDeeper(forPlayerIndex: session.drawerIndex)
                             } label: {
                                 Text("Dig deeper (reader, once per person)")
-                                    .font(.system(size: 15, weight: .semibold, design: .default))
+                                    .font(Theme.helveticaBold(size: 15))
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
                             }
@@ -284,6 +312,7 @@ private struct PlayingBoardView: View {
                 }
             }
         }
+        .onAppear { Haptics.prepare() }
     }
 
     @ViewBuilder
@@ -302,21 +331,21 @@ private struct PlayingBoardView: View {
 }
 
 private struct TurnStrip: View {
-    @ObservedObject var session: GameSession
+    var session: GameSession
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(session.currentLevel.title.uppercased())
-                .font(.system(size: 12, weight: .heavy, design: .default))
+                .font(Theme.helveticaBold(size: 12))
                 .tracking(1.6)
                 .foregroundStyle(Theme.red.opacity(0.55))
             if session.playerCount > 1 {
                 Text("\(session.playerNames[session.drawerIndex]) reads · \(session.playerNames[session.answererIndex]) answers")
-                    .font(.system(size: 17, weight: .semibold, design: .default))
+                    .font(Theme.helveticaBold(size: 17))
                     .foregroundStyle(Theme.ink)
             } else {
                 Text("Solo mode: read, then answer honestly.")
-                    .font(.system(size: 17, weight: .semibold, design: .default))
+                    .font(Theme.helveticaBold(size: 17))
                     .foregroundStyle(Theme.ink)
             }
         }
@@ -327,63 +356,54 @@ private struct TurnStrip: View {
 }
 
 private struct ProgressStrip: View {
-    @ObservedObject var session: GameSession
+    var session: GameSession
 
     var body: some View {
         let done = session.answeredInLevel
         let need = session.cardsRequiredPerLevel
         VStack(alignment: .leading, spacing: 8) {
-            ProgressView(value: Double(min(done, need)), total: Double(need)) {
-                Text("Progress toward next level (\(done)/\(need) answered)")
-                    .font(.system(size: 13, weight: .medium, design: .default))
-                    .foregroundStyle(Theme.ink.opacity(0.45))
-            }
-            .tint(Theme.red)
+            Text("Progress toward next level (\(done)/\(need) answered)")
+                .font(Theme.helveticaBold(size: 13))
+                .foregroundStyle(Theme.ink.opacity(0.45))
+            ProgressView(value: Double(min(done, need)), total: Double(need))
+                .tint(Theme.red)
         }
         .padding(.horizontal, 22)
     }
 }
 
 private struct LevelGateView: View {
-    @ObservedObject var session: GameSession
+    var session: GameSession
+
+    private var nextLevel: GameLevel? { session.currentLevel.next }
 
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
             Text("Level complete")
-                .font(.system(size: 28, weight: .heavy, design: .default))
+                .font(Theme.helveticaBold(size: 28))
             Text("You’ve answered at least \(session.cardsRequiredPerLevel) questions in \(session.currentLevel.title). Move on when the group feels ready.")
-                .font(.system(size: 16, weight: .regular, design: .default))
+                .font(Theme.helvetica(size: 16))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Theme.ink.opacity(0.6))
                 .padding(.horizontal, 28)
             VStack(spacing: 12) {
-                if session.currentLevel.next != nil {
-                    Button {
-                        session.continueToNextLevel()
-                    } label: {
-                        Text("Continue to \(session.currentLevel.next!.title)")
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Theme.red)
-                } else {
-                    Button {
-                        session.continueToNextLevel()
-                    } label: {
-                        Text("Draw final card")
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Theme.red)
+                Button {
+                    session.continueToNextLevel()
+                } label: {
+                    Text(nextLevel.map { "Continue to \($0.title)" } ?? "Draw final card")
+                        .font(Theme.helveticaBold(size: 17))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
                 }
+                .buttonStyle(.borderedProminent)
+                .tint(Theme.red)
 
                 Button {
                     session.stayInLevel()
                 } label: {
                     Text("Stay in this level")
+                        .font(Theme.helveticaBold(size: 17))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                 }
@@ -396,46 +416,38 @@ private struct LevelGateView: View {
 }
 
 private struct FinaleView: View {
-    @ObservedObject var session: GameSession
+    var session: GameSession
 
     var body: some View {
         VStack(spacing: 16) {
-            if let card = session.currentCard {
-                cardFinale(card)
+            if case let .finalThought(text) = session.currentCard {
+                FinalCardView(text: text)
                     .padding(.horizontal, 20)
                     .padding(.top, 12)
             }
-            Button("End session") {
+            Button {
                 session.endSession()
+            } label: {
+                Text("End session").font(Theme.helveticaBold(size: 17))
             }
             .buttonStyle(.borderedProminent)
             .tint(Theme.red)
             Spacer()
         }
     }
-
-    @ViewBuilder
-    private func cardFinale(_ card: CardKind) -> some View {
-        switch card {
-        case let .finalThought(text):
-            FinalCardView(text: text)
-        default:
-            EmptyView()
-        }
-    }
 }
 
 private struct SessionDoneView: View {
-    @ObservedObject var session: GameSession
+    var session: GameSession
     let onHome: () -> Void
 
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
             Text("That’s a wrap")
-                .font(.system(size: 28, weight: .heavy, design: .default))
+                .font(Theme.helveticaBold(size: 28))
             Text("Take a breath. Nothing here was saved—just people talking.")
-                .font(.system(size: 16, weight: .regular, design: .default))
+                .font(Theme.helvetica(size: 16))
                 .foregroundStyle(Theme.ink.opacity(0.55))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
@@ -445,13 +457,16 @@ private struct SessionDoneView: View {
                     session.newGameSamePlayers()
                 } label: {
                     Text("Same players, new deck")
+                        .font(Theme.helveticaBold(size: 17))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(Theme.red)
 
-                Button("Home", action: onHome)
+                Button(action: onHome) {
+                    Text("Home").font(Theme.helveticaBold(size: 17))
+                }
                     .buttonStyle(.bordered)
             }
             .padding(.horizontal, 24)

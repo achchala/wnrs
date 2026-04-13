@@ -1,21 +1,22 @@
 import SwiftUI
 
-struct CardChrome: View {
+/// Generic chrome avoids `AnyView` type erasure (cheaper type-checking and diffing).
+struct CardChrome<Content: View>: View {
     let background: Color
     let foreground: Color
     let footerForeground: Color
-    let content: () -> AnyView
+    @ViewBuilder private let content: () -> Content
 
     init(
         background: Color,
         foreground: Color,
         footerForeground: Color? = nil,
-        @ViewBuilder content: @escaping () -> some View
+        @ViewBuilder content: @escaping () -> Content
     ) {
         self.background = background
         self.foreground = foreground
         self.footerForeground = footerForeground ?? foreground.opacity(0.85)
-        self.content = { AnyView(content()) }
+        self.content = content
     }
 
     var body: some View {
@@ -27,7 +28,7 @@ struct CardChrome: View {
                 .padding(.horizontal, 22)
             Spacer(minLength: 0)
             Text("WE'RE NOT REALLY STRANGERS")
-                .font(.system(size: Theme.footerSize, weight: .semibold, design: .default))
+                .font(Theme.helveticaBold(size: Theme.footerSize))
                 .tracking(1.1)
                 .textCase(.uppercase)
                 .foregroundStyle(footerForeground)
@@ -37,7 +38,7 @@ struct CardChrome: View {
         .frame(minHeight: 420)
         .background(background)
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-        .shadow(color: Color.black.opacity(0.12), radius: 18, y: 10)
+        .shadow(color: Color.black.opacity(0.1), radius: 12, y: 6)
     }
 }
 
@@ -49,7 +50,7 @@ struct QuestionCardView: View {
         CardChrome(background: Theme.paper, foreground: Theme.red) {
             VStack(spacing: 14) {
                 Text("LEVEL \(level.levelNumber)")
-                    .font(.system(size: 13, weight: .heavy, design: .default))
+                    .font(Theme.helveticaBold(size: 13))
                     .tracking(1.4)
                     .textCase(.uppercase)
                     .foregroundStyle(Theme.red.opacity(0.55))
@@ -73,10 +74,10 @@ struct LevelIntroCardView: View {
                     .tracking(2)
                     .textCase(.uppercase)
                 Text("(\(level.title.uppercased()))")
-                    .font(.system(size: 16, weight: .bold, design: .default))
+                    .font(Theme.helveticaBold(size: 16))
                     .tracking(1.2)
                 Text(level.subtitle)
-                    .font(.system(size: 15, weight: .medium, design: .default))
+                    .font(Theme.helveticaBold(size: 15))
                     .textCase(.none)
                     .foregroundStyle(Theme.paper.opacity(0.92))
                     .padding(.top, 6)
@@ -91,13 +92,13 @@ struct WildcardCardView: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(Theme.wildcardFill)
             RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                .stroke(Color.black.opacity(0.08), lineWidth: 1)
+                .stroke(Color.black.opacity(0.06), lineWidth: 1)
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
                 Text("WILDCARD")
-                    .font(.system(size: 13, weight: .heavy, design: .default))
+                    .font(Theme.helveticaBold(size: 13))
                     .tracking(2)
                     .foregroundStyle(Theme.ink.opacity(0.45))
                     .padding(.bottom, 10)
@@ -108,7 +109,7 @@ struct WildcardCardView: View {
                     .padding(.horizontal, 22)
                 Spacer(minLength: 0)
                 Text("WE'RE NOT REALLY STRANGERS")
-                    .font(.system(size: Theme.footerSize, weight: .semibold, design: .default))
+                    .font(Theme.helveticaBold(size: Theme.footerSize))
                     .tracking(1.1)
                     .textCase(.uppercase)
                     .foregroundStyle(Theme.ink.opacity(0.35))
@@ -116,7 +117,7 @@ struct WildcardCardView: View {
             }
         }
         .frame(minHeight: 420)
-        .shadow(color: Color.black.opacity(0.1), radius: 16, y: 8)
+        .shadow(color: Color.black.opacity(0.08), radius: 10, y: 5)
     }
 }
 
@@ -126,24 +127,24 @@ struct DigDeeperCardView: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                .fill(.thinMaterial)
+                .fill(Theme.digDeeperFill)
             RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                .stroke(Color.white.opacity(0.35), lineWidth: 1)
+                .stroke(Color.white.opacity(0.5), lineWidth: 1)
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
                 Text("DIG DEEPER")
-                    .font(.system(size: 15, weight: .heavy, design: .default))
+                    .font(Theme.helveticaBold(size: 15))
                     .tracking(2.4)
                     .foregroundStyle(Theme.ink)
                     .padding(.bottom, 12)
                 Text(text)
-                    .font(.system(size: 18, weight: .semibold, design: .default))
+                    .font(Theme.helveticaBold(size: 18))
                     .foregroundStyle(Theme.ink)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
                 Spacer(minLength: 0)
                 Text("WE'RE NOT REALLY STRANGERS")
-                    .font(.system(size: Theme.footerSize, weight: .semibold, design: .default))
+                    .font(Theme.helveticaBold(size: Theme.footerSize))
                     .tracking(1.1)
                     .textCase(.uppercase)
                     .foregroundStyle(Theme.ink.opacity(0.3))
@@ -151,7 +152,7 @@ struct DigDeeperCardView: View {
             }
         }
         .frame(minHeight: 420)
-        .shadow(color: Color.black.opacity(0.08), radius: 14, y: 8)
+        .shadow(color: Color.black.opacity(0.06), radius: 8, y: 4)
     }
 }
 
@@ -162,11 +163,11 @@ struct FinalCardView: View {
         CardChrome(background: Theme.paper, foreground: Theme.ink, footerForeground: Theme.ink.opacity(0.4)) {
             VStack(spacing: 12) {
                 Text("FINAL CARD")
-                    .font(.system(size: 13, weight: .heavy, design: .default))
+                    .font(Theme.helveticaBold(size: 13))
                     .tracking(2)
                     .foregroundStyle(Theme.ink.opacity(0.45))
                 Text(text)
-                    .font(.system(size: 20, weight: .bold, design: .default))
+                    .font(Theme.helveticaBold(size: 20))
                     .textCase(.none)
                     .fixedSize(horizontal: false, vertical: true)
             }

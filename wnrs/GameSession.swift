@@ -1,18 +1,19 @@
 import Foundation
-import SwiftUI
+import Observation
 
 @MainActor
-final class GameSession: ObservableObject {
-    @Published private(set) var playerNames: [String] = []
-    @Published private(set) var currentLevel: GameLevel = .perception
-    @Published private(set) var drawerIndex: Int = 0
-    @Published private(set) var answeredInLevel: Int = 0
-    @Published private(set) var currentCard: CardKind?
-    @Published private(set) var showingLevelIntro = true
-    @Published private(set) var phase: Phase = .playing
+@Observable
+final class GameSession {
+    private(set) var playerNames: [String] = []
+    private(set) var currentLevel: GameLevel = .perception
+    private(set) var drawerIndex: Int = 0
+    private(set) var answeredInLevel: Int = 0
+    private(set) var currentCard: CardKind?
+    private(set) var showingLevelIntro = true
+    private(set) var phase: Phase = .playing
 
-    /// One use per player for the whole session (matches the physical “Dig Deeper” card).
-    @Published private(set) var digDeeperUsesRemaining: [Int: Int] = [:]
+    /// One dig-deeper per player for the session; index aligns with `playerNames`.
+    private(set) var digDeeperAvailable: [Bool] = []
 
     private let pack: QuestionPack
     private var decks: [GameLevel: [String]] = [:]
@@ -27,7 +28,7 @@ final class GameSession: ObservableObject {
         case done
     }
 
-    init(pack: QuestionPack = PackLoader.load()) {
+    init(pack: QuestionPack = PackLoader.pack) {
         self.pack = pack
     }
 
@@ -39,7 +40,8 @@ final class GameSession: ObservableObject {
     }
 
     var currentDrawerCanDigDeeper: Bool {
-        (digDeeperUsesRemaining[drawerIndex] ?? 0) > 0
+        guard drawerIndex < digDeeperAvailable.count else { return false }
+        return digDeeperAvailable[drawerIndex]
     }
 
     var questionsRemainingInLevel: Int {
@@ -50,7 +52,7 @@ final class GameSession: ObservableObject {
         let trimmed = names.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
         let fallback = (1...names.count).map { "Player \($0)" }
         playerNames = zip(trimmed, fallback).map { a, b in a.isEmpty ? b : a }
-        digDeeperUsesRemaining = Dictionary(uniqueKeysWithValues: playerNames.indices.map { ($0, 1) })
+        digDeeperAvailable = Array(repeating: true, count: playerNames.count)
         resetDecks()
         drawerIndex = 0
         currentLevel = .perception
@@ -66,21 +68,21 @@ final class GameSession: ObservableObject {
 
     func drawNextQuestionCard() {
         guard var deck = decks[currentLevel], !deck.isEmpty else { return }
-        let q = deck.removeFirst()
+        let q = deck.removeLast()
         decks[currentLevel] = deck
         currentCard = .question(q, level: currentLevel)
     }
 
     func drawWildcard() {
         guard !wildPile.isEmpty else { return }
-        let w = wildPile.removeFirst()
+        let w = wildPile.removeLast()
         if wildPile.isEmpty { wildPile = pack.wildcards.shuffled() }
         currentCard = .wildcard(w)
     }
 
     func useDigDeeper(forPlayerIndex index: Int) {
-        guard let left = digDeeperUsesRemaining[index], left > 0 else { return }
-        digDeeperUsesRemaining[index] = 0
+        guard index < digDeeperAvailable.count, digDeeperAvailable[index] else { return }
+        digDeeperAvailable[index] = false
         let prompt = pack.digDeeper.randomElement() ?? "Go one layer deeper—what’s the real answer?"
         currentCard = .digDeeper(prompt)
     }
@@ -147,7 +149,7 @@ final class GameSession: ObservableObject {
         currentCard = nil
         showingLevelIntro = true
         phase = .playing
-        digDeeperUsesRemaining = Dictionary(uniqueKeysWithValues: playerNames.indices.map { ($0, 1) })
+        digDeeperAvailable = Array(repeating: true, count: playerNames.count)
     }
 
     private func resetDecks() {
