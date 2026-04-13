@@ -1,27 +1,37 @@
-import type { PackOption } from "./types";
+import type { QuestionPack } from "./types";
 import { useGame } from "./useGame";
 import { Home } from "./screens/Home";
 import { Setup } from "./screens/Setup";
 import { Play } from "./screens/Play";
+import * as G from "./game";
 
-export function App({ packOptions }: { packOptions: PackOption[] }) {
-  const initial = packOptions[0]?.pack;
-  if (!initial) {
-    return <p style={{ padding: "1rem" }}>No question packs loaded.</p>;
-  }
-  const g = useGame(initial);
+export function App({
+  corePack,
+  datingExpansionPack,
+}: {
+  corePack: QuestionPack;
+  datingExpansionPack: QuestionPack | null;
+}) {
+  const g = useGame(corePack);
 
   if (g.route === "home") {
-    return <Home onNewGame={g.goSetup} />;
+    return (
+      <Home
+        onNewGame={g.goSetup}
+        corePack={corePack}
+        datingExpansionPack={datingExpansionPack}
+      />
+    );
   }
   if (g.route === "setup") {
     return (
       <Setup
-        packOptions={packOptions}
+        datingExpansionPack={datingExpansionPack}
         onBack={g.goHome}
-        onStart={(pack, names, startLevel, mode, firstReader) =>
-          g.startGame(pack, names, startLevel, mode, firstReader)
-        }
+        onStart={(includeHonestDating, names, startLevel, mode, firstReader) => {
+          const playPack = G.mergePlayPack(corePack, datingExpansionPack, includeHonestDating);
+          g.startGame(playPack, names, startLevel, mode, firstReader);
+        }}
       />
     );
   }

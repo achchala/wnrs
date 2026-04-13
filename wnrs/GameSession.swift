@@ -43,7 +43,7 @@ final class GameSession {
         case done
     }
 
-    init(pack: QuestionPack = PackLoader.defaultPack) {
+    init(pack: QuestionPack = PackLoader.playPack(includeHonestDatingExpansion: false)) {
         self.pack = pack
     }
 

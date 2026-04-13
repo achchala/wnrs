@@ -18,8 +18,8 @@ private enum Haptics {
 }
 
 struct RootView: View {
-    @State private var selectedPackIndex = 0
-    @State private var session = GameSession(pack: PackLoader.options[0].pack)
+    @State private var includeHonestDatingExpansion = false
+    @State private var session = GameSession()
     @State private var path = NavigationPath()
 
     var body: some View {
@@ -31,7 +31,10 @@ struct RootView: View {
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .setup:
-                    SetupView(selectedPackIndex: $selectedPackIndex, session: session) {
+                    SetupView(
+                        session: session,
+                        includeHonestDatingExpansion: $includeHonestDatingExpansion
+                    ) {
                         path.append(Route.play)
                     }
                 case .play:
@@ -44,10 +47,8 @@ struct RootView: View {
             }
         }
         .tint(Theme.red)
-        .onChange(of: selectedPackIndex) { _, i in
-            let opts = PackLoader.options
-            guard i >= 0, i < opts.count else { return }
-            session = GameSession(pack: opts[i].pack)
+        .onChange(of: includeHonestDatingExpansion) { _, on in
+            session = GameSession(pack: PackLoader.playPack(includeHonestDatingExpansion: on))
         }
     }
 }
@@ -99,8 +100,8 @@ struct HomeView: View {
 }
 
 struct SetupView: View {
-    @Binding var selectedPackIndex: Int
     var session: GameSession
+    @Binding var includeHonestDatingExpansion: Bool
     let onStart: () -> Void
     @State private var mode: GameSession.PlayMode = .duo
     @State private var groupCount = 3
@@ -115,14 +116,13 @@ struct SetupView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Card deck")
-                    .font(Theme.helveticaBold(size: 13))
-                Picker("Card deck", selection: $selectedPackIndex) {
-                    ForEach(Array(PackLoader.options.enumerated()), id: \.offset) { i, opt in
-                        Text(opt.title).tag(i)
+                if PackLoader.datingExpansionPack != nil {
+                    Toggle(isOn: $includeHonestDatingExpansion) {
+                        Text("Include Honest dating expansion")
+                            .font(Theme.helveticaBold(size: 17))
                     }
+                    .tint(Theme.red)
                 }
-                .pickerStyle(.segmented)
 
                 Text("How you’re playing")
                     .font(Theme.helveticaBold(size: 13))
@@ -224,7 +224,79 @@ struct SetupView: View {
     }
 }
 
+private enum QuestionCatalogSheetKind: String, Identifiable {
+    case originalDeck
+    case honestDatingExpansion
+    var id: String { rawValue }
+}
+
+private struct QuestionCatalogSheet: View {
+    let kind: QuestionCatalogSheetKind
+    @Environment(\.dismiss) private var dismiss
+
+    private var title: String {
+        switch kind {
+        case .originalDeck: return "Original deck"
+        case .honestDatingExpansion: return "Honest dating expansion"
+        }
+    }
+
+    private var displayPack: QuestionPack? {
+        switch kind {
+        case .originalDeck: return PackLoader.corePack
+        case .honestDatingExpansion: return PackLoader.datingExpansionPack
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                if let pack = displayPack {
+                    VStack(alignment: .leading, spacing: 22) {
+                        catalogSection("Level 1 — Perception", pack.perception)
+                        catalogSection("Level 2 — Connection", pack.connection)
+                        catalogSection("Level 3 — Reflection", pack.reflection)
+                        catalogSection("Wildcards", pack.wildcards)
+                    }
+                    .padding(20)
+                } else {
+                    Text("Honest dating expansion isn’t bundled in this build.")
+                        .font(Theme.helveticaBold(size: 16))
+                        .foregroundStyle(Theme.ink.opacity(0.65))
+                        .padding(24)
+                }
+            }
+            .background(Theme.paper)
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                        .font(Theme.helveticaBold(size: 17))
+                }
+            }
+        }
+    }
+
+    private func catalogSection(_ heading: String, _ lines: [String]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(heading)
+                .font(Theme.helveticaBold(size: 13))
+                .foregroundStyle(Theme.red)
+                .textCase(.uppercase)
+            ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                Text(line)
+                    .font(Theme.helveticaBold(size: 15))
+                    .foregroundStyle(Theme.ink.opacity(0.9))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
 struct HowToPlayView: View {
+    @State private var catalogSheet: QuestionCatalogSheetKind?
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
@@ -233,6 +305,31 @@ struct HowToPlayView: View {
                 Text("two players: alternate who reads and who answers. fifteen question cards per level. each person’s dig deeper refreshes when you start a new level.")
                 Text("group (3–6): one reader, everyone answers. when each person has read about twice, move up (so that’s \(2)×(number of players) question cards per level). dig deeper once per person for the whole game.")
                 Text("wildcards are actions; do them, then tap next turn.")
+                Text("optional: turn on “Honest dating expansion” in setup to mix in those cards with the original deck.")
+
+                VStack(spacing: 12) {
+                    Button {
+                        catalogSheet = .originalDeck
+                    } label: {
+                        Text("See all questions — original deck")
+                            .font(Theme.helveticaBold(size: 16))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Theme.red)
+
+                    Button {
+                        catalogSheet = .honestDatingExpansion
+                    } label: {
+                        Text("See all questions — Honest dating expansion")
+                            .font(Theme.helveticaBold(size: 16))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding(.top, 8)
             }
             .font(Theme.helveticaBold(size: 16))
             .foregroundStyle(Theme.ink.opacity(0.85))
@@ -241,6 +338,9 @@ struct HowToPlayView: View {
         .background(Theme.paper)
         .navigationTitle("how to play")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $catalogSheet) { kind in
+            QuestionCatalogSheet(kind: kind)
+        }
     }
 }
 

@@ -13,8 +13,6 @@ export interface QuestionPack {
   finalPrompts: string[];
 }
 
-export type PackOption = { id: string; label: string; pack: QuestionPack };
-
 export type Card =
   | { kind: "question"; text: string; level: Level }
   | { kind: "wildcard"; text: string }

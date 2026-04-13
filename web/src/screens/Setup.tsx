@@ -1,23 +1,24 @@
 import { useState } from "preact/hooks";
-import { LEVEL_ORDER, levelTitle, type Level, type PackOption, type QuestionPack } from "../types";
+import { LEVEL_ORDER, levelTitle, type Level } from "../types";
+import type { QuestionPack } from "../types";
 import type { PlayMode } from "../game";
 
 export function Setup({
-  packOptions,
+  datingExpansionPack,
   onBack,
   onStart,
 }: {
-  packOptions: PackOption[];
+  datingExpansionPack: QuestionPack | null;
   onBack: () => void;
   onStart: (
-    pack: QuestionPack,
+    includeHonestDating: boolean,
     names: string[],
     startLevel: Level,
     mode: PlayMode,
     firstReaderIndex: number,
   ) => void;
 }) {
-  const [packIndex, setPackIndex] = useState(0);
+  const [includeHonestDating, setIncludeHonestDating] = useState(false);
   const [mode, setMode] = useState<PlayMode>("duo");
   const [groupCount, setGroupCount] = useState(3);
   const [names, setNames] = useState<string[]>(["", ""]);
@@ -66,23 +67,19 @@ export function Setup({
           Back
         </button>
       </div>
-      <p class="muted" style={{ margin: 0 }}>
-        Card deck
-      </p>
-      <div class="level-strip" role="group" aria-label="Card deck">
-        {packOptions.map((opt, i) => (
-          <button
-            key={opt.id}
-            type="button"
-            class={`level-btn${packIndex === i ? " level-btn-active" : ""}`}
-            onClick={() => setPackIndex(i)}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
 
-      <p class="muted" style={{ margin: "0.75rem 0 0" }}>
+      {datingExpansionPack && (
+        <label class="toggle-row">
+          <input
+            type="checkbox"
+            checked={includeHonestDating}
+            onChange={() => setIncludeHonestDating((v) => !v)}
+          />
+          <span>Include Honest dating expansion</span>
+        </label>
+      )}
+
+      <p class="muted" style={{ margin: 0 }}>
         How you’re playing
       </p>
       <div class="level-strip" role="group" aria-label="Play mode">
@@ -189,7 +186,7 @@ export function Setup({
         style={{ marginTop: "auto" }}
         onClick={() =>
           onStart(
-            packOptions[packIndex]!.pack,
+            includeHonestDating,
             names.slice(0, activeCount),
             startLevel,
             mode,

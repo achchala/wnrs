@@ -3,6 +3,24 @@ import { nextLevel } from "./types";
 
 export type PlayMode = "duo" | "group";
 
+/** Merge core + Honest dating expansion for play when `include` is true. */
+export function mergePlayPack(
+  core: QuestionPack,
+  expansion: QuestionPack | null,
+  include: boolean,
+): QuestionPack {
+  if (!include || !expansion) return core;
+  return {
+    introParagraphs: expansion.introParagraphs,
+    perception: [...core.perception, ...expansion.perception],
+    connection: [...core.connection, ...expansion.connection],
+    reflection: [...core.reflection, ...expansion.reflection],
+    wildcards: [...core.wildcards, ...expansion.wildcards],
+    digDeeper: core.digDeeper,
+    finalPrompts: core.finalPrompts,
+  };
+}
+
 /** Duo: 15 question cards per level; Dig Deeper resets each level. Group: 2×players per level; Dig once per person whole game. */
 export function cardsRequiredForLevel(s: GameSession): number {
   if (s.playMode === "duo") return 15;

@@ -5,26 +5,32 @@ import type { GameSession, PlayMode } from "./game";
 
 export type Route = "home" | "setup" | "play";
 
-export function useGame(defaultPack: QuestionPack) {
-  const [session, setSession] = useState<GameSession>(() => G.createSession(defaultPack));
+export function useGame(pack: QuestionPack) {
+  const [session, setSession] = useState<GameSession>(() => G.createSession(pack));
   const [route, setRoute] = useState<Route>("home");
 
   const goSetup = useCallback(() => setRoute("setup"), []);
   const goHome = useCallback(() => {
     setRoute("home");
-    setSession((s) => G.createSession(s.pack));
-  }, []);
+    setSession(G.createSession(pack));
+  }, [pack]);
 
   const startGame = useCallback(
     (
-      pack: QuestionPack,
+      playPack: QuestionPack,
       names: string[],
       startLevel: Level,
       playMode: PlayMode,
       firstReaderIndex: number,
     ) => {
       setSession(
-        G.configurePlayers(G.createSession(pack), names, startLevel, playMode, firstReaderIndex),
+        G.configurePlayers(
+          G.createSession(playPack),
+          names,
+          startLevel,
+          playMode,
+          firstReaderIndex,
+        ),
       );
       setRoute("play");
     },
@@ -44,6 +50,6 @@ export function useGame(defaultPack: QuestionPack) {
       startGame,
       update,
     }),
-    [session, route, goSetup, goHome, startGame, update],
+    [pack, session, route, goSetup, goHome, startGame, update],
   );
 }

@@ -41,7 +41,7 @@ enum GameLevel: String, Codable, CaseIterable, Identifiable {
 }
 
 struct QuestionPack: Codable {
-    /// Expansion-only screens shown before Level 1 (e.g. Honest Dating intro).
+    /// Optional welcome screens before Level 1 (Honest dating expansion).
     var introParagraphs: [String]?
     var perception: [String]
     var connection: [String]
@@ -59,28 +59,28 @@ enum CardKind: Equatable {
 }
 
 enum PackLoader {
-    struct Option: Identifiable {
-        let id: String
-        let title: String
-        let pack: QuestionPack
+    /// Core WNRS deck only.
+    static let corePack: QuestionPack = loadJSON("questions") ?? fallbackCore
+
+    /// Honest dating expansion cards (optional file).
+    static let datingExpansionPack: QuestionPack? = loadJSON("honest-dating")
+
+    /// Deck used in play when the expansion toggle is on or off.
+    static func playPack(includeHonestDatingExpansion: Bool) -> QuestionPack {
+        guard includeHonestDatingExpansion, let d = datingExpansionPack else { return corePack }
+        return QuestionPack(
+            introParagraphs: d.introParagraphs,
+            perception: corePack.perception + d.perception,
+            connection: corePack.connection + d.connection,
+            reflection: corePack.reflection + d.reflection,
+            wildcards: corePack.wildcards + d.wildcards,
+            digDeeper: corePack.digDeeper,
+            finalPrompts: corePack.finalPrompts
+        )
     }
 
-    /// All playable decks bundled with the app.
-    static let options: [Option] = loadOptions()
-
-    static var defaultPack: QuestionPack { options.first?.pack ?? fallbackPack }
-
-    private static func loadOptions() -> [Option] {
-        var out: [Option] = []
-        if let p = loadJSON("questions") {
-            out.append(Option(id: "core", title: "Original", pack: p))
-        }
-        if let p = loadJSON("honest-dating") {
-            out.append(Option(id: "honest-dating", title: "Honest dating", pack: p))
-        }
-        if out.isEmpty { out.append(Option(id: "fallback", title: "Fallback", pack: fallbackPack)) }
-        return out
-    }
+    /// Backward-compatible default: core only.
+    static var pack: QuestionPack { corePack }
 
     private static func loadJSON(_ name: String) -> QuestionPack? {
         guard let url = Bundle.main.url(forResource: name, withExtension: "json"),
@@ -89,13 +89,13 @@ enum PackLoader {
         return pack
     }
 
-    private static var fallbackPack: QuestionPack {
+    private static var fallbackCore: QuestionPack {
         QuestionPack(
             introParagraphs: nil,
-            perception: ["Bundle error: add JSON packs to Copy Bundle Resources."],
-            connection: ["Bundle error: add JSON packs to Copy Bundle Resources."],
-            reflection: ["Bundle error: add JSON packs to Copy Bundle Resources."],
-            wildcards: ["Fix Copy Bundle Resources for question JSON files."],
+            perception: ["Bundle error: add questions.json to the app target."],
+            connection: ["Bundle error: add questions.json to the app target."],
+            reflection: ["Bundle error: add questions.json to the app target."],
+            wildcards: ["Fix Copy Bundle Resources for questions.json."],
             digDeeper: ["Say more about that."],
             finalPrompts: ["What are you taking away from tonight?"]
         )
