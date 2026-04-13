@@ -1,0 +1,22 @@
+{
+  "name": "wnrs-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync-questions": "node scripts/sync-questions.mjs",
+    "predev": "npm run sync-questions",
+    "prebuild": "npm run sync-questions",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "check": "tsc --noEmit",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "preact": "^10.25.4"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.9.3",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.7"
+  }
+}

@@ -1,0 +1,244 @@
+:root {
+  --red: #e31c26;
+  --ink: #000;
+  --paper: #fff;
+  --muted: rgba(0, 0, 0, 0.5);
+  --radius: 28px;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  min-height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 700;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  min-height: 100dvh;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 28rem;
+  margin: 0 auto;
+  min-height: calc(100dvh - 32px);
+}
+
+.stack-grow {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.muted {
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 1rem 1.1rem;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  touch-action: manipulation;
+}
+
+.btn-primary {
+  background: var(--red);
+  color: var(--paper);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 0.6rem;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+input[type="text"] {
+  font: inherit;
+  font-weight: 700;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.stepper button {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 10px;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.card {
+  border-radius: var(--radius);
+  padding: 1.25rem 1rem 1rem;
+  min-height: 20rem;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+}
+
+.card-paper {
+  background: var(--paper);
+  color: var(--red);
+}
+
+.card-red {
+  background: var(--red);
+  color: var(--paper);
+}
+
+.card-frost {
+  background: #f4f4f6;
+  color: var(--ink);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.card-dig {
+  background: #ececf0;
+  color: var(--ink);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.card-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0 0.5rem;
+}
+
+.card-kicker {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.card-body {
+  font-size: 1.05rem;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.card-body-sentence {
+  text-transform: none;
+  font-size: 1.1rem;
+}
+
+.card-footer {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  padding-top: 0.75rem;
+}
+
+.topbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.topbar .btn-ghost {
+  width: auto;
+  align-self: flex-end;
+}
+
+.progress-wrap {
+  width: 100%;
+}
+
+.progress-wrap label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-bottom: 0.35rem;
+}
+
+progress {
+  width: 100%;
+  height: 6px;
+  accent-color: var(--red);
+}
+
+.howto p {
+  margin: 0;
+  line-height: 1.45;
+  font-size: 1rem;
+}
+
+.howto {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

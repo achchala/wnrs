@@ -26,3 +26,10 @@ fastlane/test_output
 *.ipa
 *.dSYM.zip
 *.dSYM
+
+# Web (Vite / Preact)
+web/node_modules/
+web/dist/
+web/public/questions.json
+web/.env
+web/.env.local
