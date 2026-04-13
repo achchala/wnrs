@@ -12,18 +12,17 @@ export function Home({ onNewGame }: { onNewGame: () => void }) {
           </button>
         </div>
         <div class="howto">
+          <p>what's more romantic than being understood?</p>
           <p>
-            matches the usual wnrs box flow: level 1 perception, level 2 connection, level 3 reflection, then a
-            closing prompt (often private notes, like the final card).
+            level 1 perception, level 2 connection, level 3 reflection, then a closing prompt.
           </p>
           <p>
-            two players: alternate who reads and who answers. fifteen question cards per level. dig deeper
-            refreshes when you start a new level.
+            two players: alternate who reads and who answers. fifteen question cards per level. each person's dig
+            deeper refreshes when you start a new level.
           </p>
           <p>
-            group (3–6): one reader, everyone answers your way. when each person has read about twice, move up;
-            here that’s 2×(number of players) question cards per level. dig deeper once per person for the whole
-            game.
+            group (3–6): one reader, everyone answers. when each person has read about twice, move up (so that's
+            2×(number of players) question cards per level). dig deeper once per person for the whole game.
           </p>
           <p>wildcards are actions; do them, then tap next turn.</p>
         </div>

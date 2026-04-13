@@ -211,10 +211,11 @@ struct HowToPlayView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("this app follows the usual wnrs flow (like the boxed game): level 1 perception → level 2 connection → level 3 reflection, then a final closing prompt. wildcards are actions; do them, then tap next turn.")
-                Text("two players: alternate who reads and who answers. use dig deeper when someone’s answer feels shallow; each of you gets a fresh dig deeper when you start a new level. move up after 15 question cards at that level.")
-                Text("group (3–6): one reader, everyone answers however you like (out loud or popcorn). move up after each person has read at least twice; here that means \(2)×(number of players) question cards per level. dig deeper: once per person for the whole game, like one tile in the middle.")
-                Text("end: use the final card as a cue; often you’ll write private notes, fold them, exchange, and read later.")
+                Text("what’s more romantic than being understood?")
+                Text("level 1 perception, level 2 connection, level 3 reflection, then a closing prompt.")
+                Text("two players: alternate who reads and who answers. fifteen question cards per level. each person’s dig deeper refreshes when you start a new level.")
+                Text("group (3–6): one reader, everyone answers. when each person has read about twice, move up (so that’s \(2)×(number of players) question cards per level). dig deeper once per person for the whole game.")
+                Text("wildcards are actions; do them, then tap next turn.")
             }
             .font(Theme.helveticaBold(size: 16))
             .foregroundStyle(Theme.ink.opacity(0.85))
