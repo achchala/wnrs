@@ -116,7 +116,7 @@ export function Setup({
       {mode === "duo" && (
         <>
           <p class="muted" style={{ margin: "0.5rem 0 0", fontSize: "0.8rem", lineHeight: 1.4 }}>
-            Who reads first? (Classic: staring contest—first to blink is Player 1.)
+            Who reads first?
           </p>
           <div class="level-strip" role="group" aria-label="First reader">
             <button

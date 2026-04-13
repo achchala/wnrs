@@ -138,7 +138,7 @@ struct SetupView: View {
                 }
 
                 if mode == .duo {
-                    Text("Who reads the first card? (Tip: wikiHow suggests a staring contest—first to blink is Player 1.)")
+                    Text("Who reads the first card?")
                         .font(Theme.helvetica(size: 13))
                         .foregroundStyle(Theme.ink.opacity(0.55))
                         .padding(.top, 4)
@@ -185,7 +185,7 @@ struct SetupView: View {
     private var footerHint: String {
         switch mode {
         case .duo:
-            return "Duo: alternate—one reads a Level 1 question, the other answers (then swap). After 15 Level 1 answers, move to Level 2, then Level 3. Dig Deeper resets each level."
+            return "Duo: alternate. One reads a Level 1 question, the other answers. After 15 Level 1 answers, move to Level 2, then Level 3. Dig Deeper resets each level."
         case .group:
             return "Group: reader reads aloud; everyone answers in your own way. When each person has been reader at least twice, move up a level (app tracks \(2 * activeCount) question cards per level). Dig Deeper: once per person for the whole game."
         }
@@ -211,18 +211,17 @@ struct HowToPlayView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("This app follows the usual WNRS flow (like the boxed game): Level 1 Perception → Level 2 Connection → Level 3 Reflection, then a final closing prompt. Wildcards are actions—do them, then tap next turn.")
-                Text("Two players: alternate who reads and who answers. Use Dig Deeper when someone’s answer feels shallow—each of you gets a fresh Dig Deeper when you start a new level. Move up after 15 question cards at that level.")
-                Text("Group (3–6): one reader, everyone answers however you like (out loud or popcorn). Move up after each person has read at least twice—here that means \(2)×(number of players) question cards per level. Dig Deeper: once per person for the whole game, like one tile in the middle.")
-                Text("End: use the final card as a cue—often you’ll write private notes, fold them, exchange, and read later.")
+                Text("this app follows the usual wnrs flow (like the boxed game): level 1 perception → level 2 connection → level 3 reflection, then a final closing prompt. wildcards are actions; do them, then tap next turn.")
+                Text("two players: alternate who reads and who answers. use dig deeper when someone’s answer feels shallow; each of you gets a fresh dig deeper when you start a new level. move up after 15 question cards at that level.")
+                Text("group (3–6): one reader, everyone answers however you like (out loud or popcorn). move up after each person has read at least twice; here that means \(2)×(number of players) question cards per level. dig deeper: once per person for the whole game, like one tile in the middle.")
+                Text("end: use the final card as a cue; often you’ll write private notes, fold them, exchange, and read later.")
             }
             .font(Theme.helveticaBold(size: 16))
             .foregroundStyle(Theme.ink.opacity(0.85))
             .padding(20)
-            .textCase(.uppercase)
         }
         .background(Theme.paper)
-        .navigationTitle("HOW TO PLAY")
+        .navigationTitle("how to play")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -406,7 +405,7 @@ private struct TurnStrip: View {
                 .tracking(1.6)
                 .foregroundStyle(Theme.red.opacity(0.55))
             if session.playMode == .duo, session.playerCount == 2 {
-                Text("\(session.playerNames[session.drawerIndex]) reads · \(session.playerNames[session.answererIndex]) answers — then swap.")
+                Text("\(session.playerNames[session.drawerIndex]) reads · \(session.playerNames[session.answererIndex]) answers.")
                     .font(Theme.helveticaBold(size: 17))
                     .foregroundStyle(Theme.ink)
             } else if session.playerCount > 1 {

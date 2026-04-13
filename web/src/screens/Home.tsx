@@ -13,18 +13,19 @@ export function Home({ onNewGame }: { onNewGame: () => void }) {
         </div>
         <div class="howto">
           <p>
-            Matches the usual WNRS box flow: Level 1 Perception, Level 2 Connection, Level 3 Reflection, then a
-            closing prompt (often private notes—like the Final Card).
+            matches the usual wnrs box flow: level 1 perception, level 2 connection, level 3 reflection, then a
+            closing prompt (often private notes, like the final card).
           </p>
           <p>
-            Two players: alternate who reads and who answers. Fifteen question cards per level. Dig Deeper
+            two players: alternate who reads and who answers. fifteen question cards per level. dig deeper
             refreshes when you start a new level.
           </p>
           <p>
-            Group (3–6): one reader, everyone answers your way. When each person has read about twice, move up—here
-            that’s 2×(number of players) question cards per level. Dig Deeper once per person for the whole game.
+            group (3–6): one reader, everyone answers your way. when each person has read about twice, move up;
+            here that’s 2×(number of players) question cards per level. dig deeper once per person for the whole
+            game.
           </p>
-          <p>Wildcards are actions—do them, then tap next turn.</p>
+          <p>wildcards are actions; do them, then tap next turn.</p>
         </div>
       </div>
     );

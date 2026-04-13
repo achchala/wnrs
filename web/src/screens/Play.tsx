@@ -178,7 +178,7 @@ function Playing({
       </p>
       {session.playMode === "duo" && session.playerNames.length === 2 ? (
         <p style={{ margin: "0.25rem 0 0", fontSize: "1.05rem" }}>
-          {drawer} reads · {answerer} answers — then swap.
+          {drawer} reads · {answerer} answers.
         </p>
       ) : session.playerNames.length > 1 ? (
         <p style={{ margin: "0.25rem 0 0", fontSize: "1.05rem" }}>
